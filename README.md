@@ -33,36 +33,42 @@ Many of the popular self-supervised learning (SSL) methods are tailored for Imag
  - Purpose: Handles initial stages of data processing.
  - Data cleaning and transformation.
  - Definition of dataloaders and datasets for model training and evaluation.
+   
 **notebooks**
  - Purpose: Contains Jupyter notebooks for various tasks.
  - Data visualization for insights into dataset characteristics.
  - Quick and interactive experiments or prototyping.
+   
 **Dockerfile**
  - Purpose: Script for creating a Docker image.
  - Automates setting up the virtual environment.
  - Ensures consistency and reproducibility.
+   
 **requirements.txt**
  - Purpose: Lists repository dependencies.
  - Ensures necessary Python packages are installed.
  - Simplifies environment setup for users.
+   
 **train.py**
  - Purpose: Script for model training initiation.
  - Configures model training parameters.
  - Manages the training process and saves trained models.
+   
 **predict.py**
  - Purpose: Utility script for model predictions.
  - Loads trained models and outputs predictions based on input data.
+   
 **models**
  - Purpose: Storage for model architectures.
  - Preserves and organizes various model structures.
  - Provides easy access for revisiting or reloading specific models.
+   
 **results**
  - Purpose: Repository section for outcomes and model outputs.
  - Displays visualized results and insights into model behavior.
  - Storage for plots, figures, and related visual artifacts.
+   
 **utils**
  - Purpose: A directory for utility functions and scripts.
  - Contains miscellaneous helper functions that can be used across different parts of the repository.
  - Ensures code reusability and organization.
-
-
