@@ -1,6 +1,6 @@
 # Self-supervised learning “in-the-wild"
 
-## Team: ChatGPT suggest a teamname
+## Team: Hey ChatGPT, suggest a teamname
 
 ## Authors
 - [**István Péter (TCTYJW)**](https://github.com/)
