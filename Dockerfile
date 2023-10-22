@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update
 RUN apt-get install -y python3.10 python3-pip
 RUN apt update
-RUN apt-get install -y python3.10 python3-pip nvidia-container-toolkit
+RUN apt-get install -y python3.10 python3-pip nvidia-container-toolkit jupyter
 
 RUN apt-get install 
 

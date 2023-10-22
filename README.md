@@ -72,3 +72,24 @@ Many of the popular self-supervised learning (SSL) methods are tailored for Imag
  - Purpose: A directory for utility functions and scripts.
  - Contains miscellaneous helper functions that can be used across different parts of the repository.
  - Ensures code reusability and organization.
+
+ ## How to run
+
+ After pulling the project, first make sure you have both Docker and [NVidia Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) installed. If you install it just before building and running the container, make sure to restart the Docker daemon with
+ ```
+ sudo systemctl restart docker
+ ```
+ (Assuming you work in a Linux environment with `systemd`. For other use cases, see the Docker documentation for your platform).
+ Some errors down the road can also be fixed by restarting the Docker runtime.
+ 
+ In the repo's directory, run:
+ ```
+ docker build -t {IMAGE_NAME} .
+ ```
+ where you can specify `{IMAGE_NAME}`, then:
+ ```
+ docker run --rm --gpus all -it {IMAGE_NAME}
+ ```
+ to enter in the interactive terminal after running the commands in the [Dockerfile](Dockerfile). 
+
+By specifying port forwarding (`-p {HOST_PORT}:{CONTAINER_PORT}`) from the container port 8888 (used by `jupyter notebook`) to the host port of your liking, you can run the `jupyter notebook` command inside the terminal and access the notebook itself at `http://localhost:{PORT}`, where you can run the preprocess notebook.
