@@ -1,0 +1,15 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: linux-64
+colorspacious==1.1.2
+matplotlib==3.8.1
+numpy==1.26.2
+Pillow==10.0.1
+scikit-image==0.22.0
+scipy==1.11.3
+tensorboard==2.15.1
+torch==2.1.1
+torchvision==0.16.1
+tqdm==4.66.1
+omegaconf==2.3.0
+IPython==8.17.2
