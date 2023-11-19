@@ -5,7 +5,8 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.transforms import Compose, ToTensor, Resize, Grayscale, ToPILImage
+from torchvision.transforms import Compose, ToTensor, Resize, Grayscale, ToPILImage, Lambda
+from torchvision import transforms
 from tqdm import tqdm
 import PIL
 
@@ -15,32 +16,27 @@ from colorizers import *
 
 conf = {
     "resolution": 16,   #Image resolution, def 256
-    "fraction": 0.1,    #Fraction of the dataset
+    "fraction": 0.2,    #Fraction of the dataset
     "num_workers": 12,  #For the dataloader, default 12 for 3050
-    "batch_size": 2048,
-    "num_epochs": 10
+    "batch_size": 1024,
+    "num_epochs": 64
 }
 conf=OmegaConf.create(conf)
 
 # Check if GPU is available
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print("Using device: "+("cuda" if torch.cuda.is_available() else "cpu"))
+device_type = ("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device(device_type)
+print("Using device: "+(device_type))
 
 # Define your data transformations
 transform = Compose([
     Resize((conf.resolution, conf.resolution)),  # Adjust the size as needed
-    Grayscale(num_output_channels=1),  # Convert to grayscale
     ToTensor(),
-    # Add more transforms if necessary
-])
-
-target_transform = Compose([
-    Resize((conf.resolution, conf.resolution)),  # Adjust the size as needed
-    ToTensor(),
+    #Lambda(rgb_to_l),
 ])
 
 # Load the full dataset
-full_dataset = MyPlaces365(root='./imgs/places365', split='train-standard', transform=transform,target_transform=target_transform)
+full_dataset = MyPlaces365(root='./imgs/places365', split='train-standard', transform=transform)
 
 # Calculate the number of samples to keep (e.g., 10%)
 num_samples = int(len(full_dataset) * conf.fraction)
