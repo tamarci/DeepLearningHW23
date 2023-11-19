@@ -29,6 +29,11 @@ Many of the popular self-supervised learning (SSL) methods are tailored for Imag
 
 ## Description of the files and folders in the repo
 
+**[colorization](https://github.com/tamarci/DeepLearningHW23/tree/main/colorization) folder**
+ - Purpose: Our work for the Milestone2.
+ - Contains a pipeline for training a simple model for colorazing black and white images.
+ - You can evaluate the model, compare to the original model, and follow the results on tensorboard.
+
 **preprocessing folder**
  - Purpose: Handles initial stages of data processing.
  - Data cleaning and transformation.
