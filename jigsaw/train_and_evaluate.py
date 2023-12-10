@@ -3,14 +3,17 @@ from zipfile import ZipFile
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.optim import Adam
+from torch.optim import Adam, SGD
 from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision.datasets import Places365, ImageFolder
 from torchvision.datasets.utils import download_url
 from torchvision import transforms
 from lightning import LightningModule, LightningDataModule, Trainer, seed_everything
 from lightning.pytorch.loggers import WandbLogger
+from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 from tqdm import tqdm
+import wandb
+import torchmetrics
 
 seed_everything(42)
 np.random.seed(42)
@@ -236,11 +239,13 @@ class JigsawModel(LightningModule):
 
 
 class LinearClassifier(LightningModule):
-    def __init__(self, backbone_path, backbone_output_size=FC1, num_classes=200):
+    def __init__(self, backbone_path, backbone_output_size=FC1, lr=1e-3, num_classes=200):
         super().__init__()
         self.feature_extractor = torch.load(backbone_path)
         self.classifier = nn.Linear(backbone_output_size, num_classes)
         self.loss = nn.CrossEntropyLoss()
+        self.lr = lr
+        self.accuracy = torchmetrics.classification.MulticlassAccuracy(num_classes=num_classes)
 
     def forward(self, x):
         x = self.feature_extractor(x)
@@ -259,6 +264,8 @@ class LinearClassifier(LightningModule):
         pred_label = self(img)
         loss = self.loss(pred_label, true_label)
         self.log("val loss", loss)
+        acc = self.accuracy(pred_label, true_label)
+        self.log("val acc", acc)
         return loss
     
     def test_step(self, batch, batch_idx):
@@ -266,16 +273,29 @@ class LinearClassifier(LightningModule):
         pred_label = self(img)
         loss = self.loss(pred_label, true_label)
         self.log("test loss", loss)
+        acc = self.accuracy(pred_label, true_label)
+        self.log("test acc", acc)
         return loss
 
     def configure_optimizers(self):
-        # train only the linear layer
-        optimizer = Adam(self.classifier.parameters(), lr=0.01)
+        optimizer = Adam(self.classifier.parameters(), lr=self.lr)
         return optimizer
 
+# to be called inside sweeps:
+def fit_sweep(config=None):
+    with wandb.init(config=config):
+        config = wandb.config
+        
+        datamodule = TinyImageNetDataModule(batch_size=config.batch_size)
+        model = LinearClassifier(config.feature_extractor_path, lr=config.lr)
+        wandb_logger = WandbLogger(project="DL-HF-Linear-Benchmark")
+        
+        early_stopping = EarlyStopping(monitor="val loss", patience=5, verbose=True, mode="min")
+        trainer = Trainer(max_epochs=config.epochs, logger=wandb_logger, callbacks=[early_stopping])
+        trainer.fit(model, datamodule=datamodule)
 
 # main functions: pretrain, evaluation
-def train_and_save():
+def pretrain_and_save():
     datamodule = Places365TileDataModule(batch_size=64)
     # datamodule = Places365TileDataModule(batch_size=64, permutations_file="data/perm4.npy")
     wandb_logger = WandbLogger(project="DL-HF-Jigsaw-Pretrain")
@@ -287,17 +307,43 @@ def train_and_save():
     model.save_feature_extractor("models/jigsaw_10_1024.pth")
     # model.save_feature_extractor("models/jigsaw_2x2_1024.pth")
 
+
+def linear_benchmark_evaluation_with_sweeps(feature_extractor_path="models/random_backbone_1024.pth"):
+    sweep_config = {
+        "method": "random",
+        "name": "lb-hyperopt",
+        "metric": {
+            "goal": "minimize",
+            "name": "val loss"
+        },
+        "parameters": {
+            "batch_size": {"values": [64, 128, 256]},
+            "lr": {
+                "distribution": "uniform",
+                "min": 1e-4,
+                "max": 1e-2
+            },
+            "epochs": {"value": 15},
+            "feature_extractor_path": {"value": feature_extractor_path}
+        },
+    }
+
+    sweep_id = wandb.sweep(sweep_config, project="DL-HF-Linear-Benchmark")
+    wandb.agent(sweep_id, function=fit_sweep, count=10)
+
+
 # def load_feature_extractor_and_evaluate(feature_extractor_path="models/random_backbone_1024.pth"):
 def load_feature_extractor_and_evaluate(feature_extractor_path="models/jigsaw_10_1024.pth"):
 # def load_feature_extractor_and_evaluate(feature_extractor_path="models/jigsaw_2x2_1024.pth"):
     datamodule = TinyImageNetDataModule(batch_size=256)
     wandb_logger = WandbLogger(project="DL-HF-Linear-Benchmark")
     model = LinearClassifier(feature_extractor_path)
-    trainer = Trainer(max_epochs=10, logger=wandb_logger)
+    trainer = Trainer(max_epochs=15, logger=wandb_logger)
     trainer.fit(model, datamodule=datamodule)
     trainer.test(model, datamodule=datamodule)
 
 
 if __name__ == "__main__":
-    train_and_save()
-    load_feature_extractor_and_evaluate()
+    # pretrain_and_save()
+    # load_feature_extractor_and_evaluate()
+    linear_benchmark_evaluation_with_sweeps()
