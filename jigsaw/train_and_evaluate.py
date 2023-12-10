@@ -32,7 +32,7 @@ FC1 = 1024
 FC2 = 256
 
 # task parameters
-N_PERMUTATIONS = 24
+N_PERMUTATIONS = 10
 N_TILES = 3
 IMG_SIZE = N_TILES * 64
 
@@ -341,7 +341,7 @@ def linear_benchmark_evaluation_with_sweeps(feature_extractor_path):
 
 def load_feature_extractor_and_evaluate(feature_extractor_path):
     """Run linear benchmark evaluation on the Tiny-Imagenet dataset, loading the pretrained model at feature_extractor_path."""
-    datamodule = TinyImageNetDataModule(batch_size=256)
+    datamodule = TinyImageNetDataModule(batch_size=32)
     wandb_logger = WandbLogger(project=WANDB_PROJECT_LINEAR_BENCHMARK)
     model = LinearClassifier(feature_extractor_path)
     trainer = Trainer(max_epochs=15, logger=wandb_logger)
