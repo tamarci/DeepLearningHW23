@@ -46,3 +46,11 @@ tensorboard --logdir_runs
 Opening in your browser this link: http://localhost:6006/, you should see something like this:
 
 ![tensorboard.png](./tensorboard.png)
+
+Our best model is at the following [link](https://drive.google.com/drive/folders/12I7s6N5d8JGZ9MgK6pJQTd0noXoH8Z7U?usp=sharing).
+
+### Benchmarking
+
+We have splitted the model, freezed the weights and merged with the ResNet50, to improve its ability. For benchmarking, we used the [Fair SSL Benchmark](https://github.com/facebookresearch/fair_self_supervision_benchmark), it was once again a challenge to run it in a usefull time in our poor 3050 (the original one was running on 8 GPU :c).
+
+
