@@ -1,9 +1,10 @@
+import argparse
 import os
 from zipfile import ZipFile
 import numpy as np
 import torch
 import torch.nn as nn
-from torch.optim import Adam, SGD
+from torch.optim import Adam
 from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision.datasets import Places365, ImageFolder
 from torchvision.datasets.utils import download_url
@@ -18,13 +19,21 @@ import torchmetrics
 seed_everything(42)
 np.random.seed(42)
 
+# wandb configuration
+WANDB_PROJECT_PRETRAIN = "DL-HF-Jigsaw-Pretrain"
+WANDB_PROJECT_LINEAR_BENCHMARK = "DL-HF-Linear-Benchmark"
+WANDB_SWEEP_NAME = "lb-hyperopt"
+
+# model parameters
 CONV1_C = 96
 CONV2_C = 256
 CONV3_C = 384
 FC1 = 1024 
 FC2 = 256
+
+# task parameters
 N_PERMUTATIONS = 24
-N_TILES = 2
+N_TILES = 3
 IMG_SIZE = N_TILES * 64
 
 # utility classes
@@ -295,23 +304,21 @@ def fit_sweep(config=None):
         trainer.fit(model, datamodule=datamodule)
 
 # main functions: pretrain, evaluation
-def pretrain_and_save():
-    datamodule = Places365TileDataModule(batch_size=64)
-    # datamodule = Places365TileDataModule(batch_size=64, permutations_file="data/perm4.npy")
-    wandb_logger = WandbLogger(project="DL-HF-Jigsaw-Pretrain")
+def pretrain_and_save(save_model_to):
+    datamodule = Places365TileDataModule(batch_size=32, num_workers=4)
+    wandb_logger = WandbLogger(project=WANDB_PROJECT_PRETRAIN)
     model = JigsawModel()
     trainer = Trainer(max_epochs=5, logger=wandb_logger)
-    print("Starting fit...")
+    
     trainer.fit(model, datamodule=datamodule)
     # trainer.test(model, datamodule=datamodule) # it takes up a lot of resources, it killed my system
-    model.save_feature_extractor("models/jigsaw_10_1024.pth")
-    # model.save_feature_extractor("models/jigsaw_2x2_1024.pth")
+    model.save_feature_extractor(save_model_to)
 
 
-def linear_benchmark_evaluation_with_sweeps(feature_extractor_path="models/random_backbone_1024.pth"):
+def linear_benchmark_evaluation_with_sweeps(feature_extractor_path):
     sweep_config = {
         "method": "random",
-        "name": "lb-hyperopt",
+        "name": WANDB_SWEEP_NAME,
         "metric": {
             "goal": "minimize",
             "name": "val loss"
@@ -328,15 +335,14 @@ def linear_benchmark_evaluation_with_sweeps(feature_extractor_path="models/rando
         },
     }
 
-    sweep_id = wandb.sweep(sweep_config, project="DL-HF-Linear-Benchmark")
+    sweep_id = wandb.sweep(sweep_config, project=WANDB_PROJECT_LINEAR_BENCHMARK)
     wandb.agent(sweep_id, function=fit_sweep, count=10)
 
 
-# def load_feature_extractor_and_evaluate(feature_extractor_path="models/random_backbone_1024.pth"):
-def load_feature_extractor_and_evaluate(feature_extractor_path="models/jigsaw_10_1024.pth"):
-# def load_feature_extractor_and_evaluate(feature_extractor_path="models/jigsaw_2x2_1024.pth"):
+def load_feature_extractor_and_evaluate(feature_extractor_path):
+    """Run linear benchmark evaluation on the Tiny-Imagenet dataset, loading the pretrained model at feature_extractor_path."""
     datamodule = TinyImageNetDataModule(batch_size=256)
-    wandb_logger = WandbLogger(project="DL-HF-Linear-Benchmark")
+    wandb_logger = WandbLogger(project=WANDB_PROJECT_LINEAR_BENCHMARK)
     model = LinearClassifier(feature_extractor_path)
     trainer = Trainer(max_epochs=15, logger=wandb_logger)
     trainer.fit(model, datamodule=datamodule)
@@ -344,6 +350,14 @@ def load_feature_extractor_and_evaluate(feature_extractor_path="models/jigsaw_10
 
 
 if __name__ == "__main__":
-    # pretrain_and_save()
-    # load_feature_extractor_and_evaluate()
-    linear_benchmark_evaluation_with_sweeps()
+    parser = argparse.ArgumentParser(description='Runtime options for the trainer script')
+    parser.add_argument('mode', choices=['pretrain_and_benchmark', 'hyperopt'], help='Select mode: pretrain_and_benchmark or hyperopt')
+    parser.add_argument('--model_path', type=str, default="models/jigsaw_10_1024.pth", help="Save pretrained model (feature extractor) to and load from this path")
+
+    args = parser.parse_args()
+
+    if args.mode == 'pretrain_and_benchmark':
+        pretrain_and_save(args.model_path)
+        load_feature_extractor_and_evaluate(args.model_path)
+    elif args.mode == 'hyperopt':
+        linear_benchmark_evaluation_with_sweeps(args.model_path)
