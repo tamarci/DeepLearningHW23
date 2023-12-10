@@ -23,11 +23,14 @@ Many of the popular self-supervised learning (SSL) methods are tailored for Imag
  - https://github.com/fastai/imagenette
  - https://github.com/lightly-ai/lightly
  - https://github.com/vturrisi/solo-learn
+ - https://github.com/facebookresearch/fair_self_supervision_benchmark
+ - https://github.com/facebookresearch/vissl
 
 ## Datasets
 
  - https://www.kaggle.com/datasets/ambityga/imagenet100
  - https://huggingface.co/datasets/zh-plus/tiny-imagenet
+ - http://places.csail.mit.edu/index.html
 
 ## Description of the files and folders in the repo
 
