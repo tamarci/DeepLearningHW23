@@ -305,7 +305,7 @@ def fit_sweep(config=None):
 
 # main functions: pretrain, evaluation
 def pretrain_and_save(save_model_to):
-    datamodule = Places365TileDataModule(batch_size=32, num_workers=4)
+    datamodule = Places365TileDataModule(batch_size=4, num_workers=2)
     wandb_logger = WandbLogger(project=WANDB_PROJECT_PRETRAIN)
     model = JigsawModel()
     trainer = Trainer(max_epochs=5, logger=wandb_logger)
