@@ -23,8 +23,8 @@ RUN pip install -e ".[dev]"
 
 RUN mkdir -p /tmp/configs/config && \
 	wget -q -O configs/__init__.py https://dl.fbaipublicfiles.com/vissl/tutorials/configs/__init__.py && \
-	wget -q -O configs/config/eval_resnet_8gpu_transfer_in1k_linear.yaml https://github.com/facebookresearch/vissl/blob/main/configs/config/benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear.yaml && \
+	wget -q -O configs/config/eval_resnet_gpu_transfer_in1k_linear.yaml https://github.com/facebookresearch/vissl/blob/main/configs/config/benchmark/linear_image_classification/imagenet1k/eval_resnet_8gpu_transfer_in1k_linear.yaml && \
 	wget -q  https://dl.fbaipublicfiles.com/vissl/tutorials/run_distributed_engines.py
 	
 ENTRYPOINT ["python"]
-CMD ["run_distributed_engines.py","config=quick_1gpu_resnet50_simclr","config.DATA.TRAIN.DATA_SOURCES=[synthetic]"]
+CMD ["run_distributed_engines.py","config=eval_resnet_gpu_transfer_in1k_linear","config.DATA.TRAIN.DATA_SOURCES=[synthetic]"]
