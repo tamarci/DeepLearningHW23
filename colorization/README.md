@@ -7,6 +7,10 @@ For an imageprocessing SSL problem, we choosed the colorisation, and we used the
 
 For comparing the results with another dataset, we choosed the [Places365](http://places.csail.mit.edu/) dataset, because it's similar in size and complexity, but it is different from the Imagenet.
 
+**Challenges**
+
+We faced two challenges during the development: on the one hand, the publication did not contain the teaching code, it could only be evaluated, so we had to develop a pipeline that was compatible with the original. On the other hand, the Places365 dataset was quite large, and we had an Nvidia 3050 card for teaching, so we had to do a significant optimization to fit into the video memory. The resolution had to be down to 128, so an epoch of 3.5 h, at least 10 epochs were needed.
+
 **Clone the repository; install dependencies**
 
 ```
